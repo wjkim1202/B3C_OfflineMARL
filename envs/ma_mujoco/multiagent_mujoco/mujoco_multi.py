@@ -40,6 +40,10 @@ class MujocoMulti(MultiAgentEnv):
 
     def __init__(self, batch_size=None, **kwargs):
         super().__init__(batch_size, **kwargs)
+
+
+        self.full_observability = kwargs["env_args"]["full_observability"]  # e.g. Ant-v2
+
         self.scenario = kwargs["env_args"]["scenario"]  # e.g. Ant-v2
         self.agent_conf = kwargs["env_args"]["agent_conf"]  # e.g. '2x3'
         self.agent_partitions, self.mujoco_edges, self.mujoco_globals = get_parts_and_edges(self.scenario,
@@ -164,18 +168,26 @@ class MujocoMulti(MultiAgentEnv):
         return obs_n
     
     def get_obs(self):
-        """ Returns all agent observat3ions in a list """
-        state = self.env._get_obs()
-        obs_n = []
-        for a in range(self.n_agents):
-            agent_id_feats = np.zeros(self.n_agents, dtype=np.float32)
-            agent_id_feats[a] = 1.0
-            # obs_n.append(self.get_obs_agent(a))
-            # obs_n.append(np.concatenate([state, self.get_obs_agent(a), agent_id_feats]))
-            # obs_n.append(np.concatenate([self.get_obs_agent(a), agent_id_feats]))
-            obs_i = np.concatenate([state, agent_id_feats])
-            obs_i = (obs_i - np.mean(obs_i)) / np.std(obs_i)
-            obs_n.append(obs_i)
+        if self.full_observability == 1:
+            """ Returns all agent observat3ions in a list """
+            state = self.env._get_obs()
+            obs_n = []
+            for a in range(self.n_agents):
+                agent_id_feats = np.zeros(self.n_agents, dtype=np.float32)
+                agent_id_feats[a] = 1.0
+                # obs_n.append(self.get_obs_agent(a))
+                # obs_n.append(np.concatenate([state, self.get_obs_agent(a), agent_id_feats]))
+                # obs_n.append(np.concatenate([self.get_obs_agent(a), agent_id_feats]))
+                obs_i = np.concatenate([state, agent_id_feats])
+                obs_i = (obs_i - np.mean(obs_i)) / np.std(obs_i)
+                obs_n.append(obs_i)
+        else:
+            obs_n = []
+            for a in range(self.n_agents):
+                oo = np.zeros(self.observation_space[0].shape[0])
+                oo[:self.get_obs_agent(a).shape[0]] = self.get_obs_agent(a)
+                #obs_n.append(self.get_obs_agent(a))
+                obs_n.append(oo)
         return obs_n
 
     def get_obs_agent(self, agent_id):
@@ -200,8 +212,10 @@ class MujocoMulti(MultiAgentEnv):
         if self.agent_obsk is None:
             return self.get_obs_agent(0).size
         else:
-            return len(self.get_obs()[0])
-            # return max([len(self.get_obs_agent(agent_id)) for agent_id in range(self.n_agents)])
+            if self.full_observability == 1:
+                return len(self.get_obs()[0])
+            else:
+                return max([len(self.get_obs_agent(agent_id)) for agent_id in range(self.n_agents)])
 
     # def get_state(self, team=None):
     #     # TODO: May want global states for different teams (so cannot see what the other team is communicating e.g.)
