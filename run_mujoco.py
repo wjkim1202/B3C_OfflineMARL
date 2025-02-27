@@ -33,6 +33,7 @@ def make_train_env(config):
                 env_args = {"scenario": config['scenario'],
                             "agent_conf": config['agent_conf'],
                             "agent_obsk": config['agent_obsk'],
+                            "full_observability": config['full_observability'],
                             "episode_limit": 1000}
                 env = MujocoMulti(env_args=env_args)
             elif config['env_name'] == 'particle':
@@ -64,6 +65,7 @@ def make_eval_env(config):
                 env_args = {"scenario": config['scenario'],
                             "agent_conf": config['agent_conf'],
                             "agent_obsk": config['agent_obsk'],
+                            "full_observability": config['full_observability'],
                             "episode_limit": 1000}
                 env = MujocoMulti(env_args=env_args)
             else:
@@ -77,94 +79,37 @@ def make_eval_env(config):
 
 
 def run(config):
-    if 'Ant' in config['scenario'] or 'Hopper' in config['scenario'] or 'Cheetah' in config['scenario']:
-        if config['data_type'] == 'expert':
-            config['offline_ver'] = 0
-        elif config['data_type'] == 'medium-expert':
-            config['offline_ver'] = 1
-        elif config['data_type'] == 'medium':
-            config['offline_ver'] = 2
-        elif config['data_type'] == 'medium-replay':
-            config['offline_ver'] = 3
 
-    #assert config['algo']=='OMIGA', "Invalid algorithm"
-    # assert config['env_name'] == 'mujoco', "Invalid environment"
-    env_name = config['scenario'] + '-' + config['agent_conf'] + '-' + config['data_type']
-    exp_name = config['algo']
-    name = config['algo'] + '-' + config['scenario'] + '-' + config['agent_conf'] + '-' + config['data_type'] + '-' + 'test_s' + str(config['seed'])
+    entity_name = "wjkim1202"
+    project_name = "B3C"
 
-    if config['wandb'] == True:
-        if 'continuous_pred_prey_3a' in config['scenario']:
-            env_name2 = 'PP3a' + str(config['agent_view_radius'])
-        elif 'Cheetah' in config['scenario']:
-            env_name2 = 'HalfC6X1' #+ '_obsk' + str(config['agent_obsk'])
-        elif 'Walker' in config['scenario']:
-            env_name2 = 'WK2X3' #+ '_obsk' + str(config['agent_obsk'])
-        elif 'Ant' in config['scenario']:
-            env_name2 = 'Ant2X4' #+ '_obsk' + str(config['agent_obsk'])
-        elif 'Hopper' in config['scenario']:
-            env_name2 = 'Hop3X1' #+ '_obsk' + str(config['agent_obsk'])
-        
+    if config['algo'] == 'OMIGA':
+        algorithm_name = "OMIGA" 
+        algorithm_name = algorithm_name + '_a' + str(config['alpha'])
+    elif config['algo'] == 'FACMAC':
+        algorithm_name = "FACMAC"
+        algorithm_name = algorithm_name + '_' + str(config['mixer']) + '_rl' + str(config['coeff_rl']) + '_bc' + str(config['coeff_bc']) + '_clip' + str(config['clipq'])
 
-        print("--- env name : ", env_name2)
-        entity_name = "wjkim1202"
-        if 'continuous_pred_prey_3a' in config['scenario']:
-            project_name = "OMIGA_"
-        else:
-            project_name = "OMARL_B2C_"
+    if config['comm'] == 1:
+        algorithm_name = algorithm_name + '_comm' + str(config['dim_msg'])
 
-        if config['algo'] == 'OMIGA':
-            algorithm_name = "OMIGA_mlp"
-            if config['alpha'] != 10:
-                algorithm_name = algorithm_name + '_a' + str(config['alpha'])
-        elif config['algo'] == 'FACMAC':
-            algorithm_name = "FACMAC_mlp"
-        if config['bc'] == 0:
-            algorithm_name = algorithm_name + '_nbc'
-        elif config['bc'] != 1:
-            algorithm_name = algorithm_name + '_bc'+str(config['bc'])
-
-        if config['comm'] == 1:
-            algorithm_name = algorithm_name + '_comm' + str(config['dim_msg'])
-            if config['nbc4comm']== 1:
-                algorithm_name = algorithm_name + '_nbc4comm'
-        
-        if config['clipq'] != 0:
-            algorithm_name = algorithm_name + '_clipq' + str(config['clipq'])
-        
-        if config['pg_norm'] != 1:
-            algorithm_name = algorithm_name + '_pg' + str(config['pg_norm'])
-
-
-        if config['mixer'] != 'nonmono':
-            algorithm_name = algorithm_name + '_' + str(config['mixer'])
-
-        if 'Ant' in config['scenario'] or 'Hopper' in config['scenario'] or 'Cheetah' in config['scenario']:
-            if config['data_type'] == 'expert':
-                config['offline_ver'] = 0
-            elif config['data_type'] == 'medium-expert':
-                config['offline_ver'] = 1
-            elif config['data_type'] == 'medium':
-                config['offline_ver'] = 2
-            elif config['data_type'] == 'medium-replay':
-                config['offline_ver'] = 3
-        elif 'continuous_pred_prey_3a' in config['scenario']:
-            config['offline_ver'] = args.offline_ver
+    
+    if config['full_observability'] == 1:
+        env_name = 'fo_' + str(config['scenario']) +'-' + str(config['agent_conf'])
+    else:
+        env_name = 'po_' + str(config['scenario']) +'-' + str(config['agent_conf']) + '-obsk' + str(config['agent_obsk'])
+    env_name = env_name + '_dataset' + str(config['offline_ver'])
 
         
-        
-        offline_ver = config['offline_ver']
+    if config['wandb']:
         wandb.init(config=args,
-                   project=project_name+env_name2 + "v" + str(offline_ver) + '_s0',
-                   entity=entity_name,
-                   name= algorithm_name,
-                   group=algorithm_name,
-                   job_type="training",
-                   reinit=True)
-        proj_name = project_name+env_name2 + "v" + str(offline_ver) + '_s0'
-        alg_name = algorithm_name
-        
-        #wandb.init(project=exp_name, name=name, group=env_name)
+                    project=project_name+ '_' + env_name,
+                    entity=entity_name,
+                    name= algorithm_name,
+                    group=algorithm_name,
+                    job_type="training",
+                    reinit=True)
+    
 
     # Seeding
     np.random.seed(config['seed'])
@@ -173,11 +118,12 @@ def run(config):
         env = make_train_env(config)
         eval_env = make_eval_env(config)
         state_dim = env.share_observation_space[0].shape[0]
-        if 'Ant' in config['scenario'] or 'Hopper' in config['scenario'] or 'Cheetah' in config['scenario']:
+        if config['full_observability'] == 1:
             state_dim =  env.observation_space[0].shape[0]
         obs_dim = env.observation_space[0].shape[0]
         action_dim = env.action_space[0].shape[0]
         n_agents = len(env.observation_space)
+
     elif config['env_name'] == 'particle':
         env_args = {"scenario_name": config['scenario'],
                                 "benchmark": False,
@@ -188,7 +134,6 @@ def run(config):
                                 "episode_limit": 50}
         env = partial(env_fn, env=Particle)(env_args=env_args)
         eval_env = partial(env_fn, env=Particle)(env_args=env_args)
-        
         obs_dim = env.get_obs_size()
         action_dim = 2
         n_agents = 3
@@ -205,11 +150,8 @@ def run(config):
     print("====== state_dim : ", state_dim)
     
     # Datasets
-    offline_dataset = ReplayBuffer(obs_dim, action_dim, state_dim, n_agents, env_name, config['data_dir'], device=config['device'])
-    #offline_dataset.load()
-    
-    avg_epi_ret_in_dataset, max_epi_ret_in_dataset = offline_dataset.load(env_name= config['scenario'], agent_view_radius = config['agent_view_radius'], offline_ver=args.offline_ver, obsk=config['agent_obsk'], n_agents=n_agents, n_actions=action_dim)
-
+    offline_dataset = ReplayBuffer(obs_dim, action_dim, state_dim, n_agents, env_name, config['data_dir'], device=config['device'])    
+    avg_epi_ret_in_dataset, max_epi_ret_in_dataset = offline_dataset.load(env_name= env_name, agent_view_radius = config['agent_view_radius'], offline_ver=config['offline_ver'], obsk=config['agent_obsk'], n_agents=n_agents, n_actions=action_dim)
 
     config['avg_epi_ret_in_dataset'] = avg_epi_ret_in_dataset
     config['max_epi_ret_in_dataset'] = max_epi_ret_in_dataset
@@ -218,17 +160,15 @@ def run(config):
 
     def _eval_and_log(train_result, config):
         print("==========================================")
-        print("proj_name : ", proj_name)
-        print("alg_name : ", alg_name)
-        print("env_name : ", config['env_name'])
-        print("config['max_epi_ret_in_dataset'] : ", config['max_epi_ret_in_dataset'])
+        print("env_name : ", env_name)
+        print("max return : ", config['max_epi_ret_in_dataset'])
+        print("avg return : ", config['avg_epi_ret_in_dataset'])
         train_result = {k: v.detach().cpu().numpy() for k, v in train_result.items()}
         print('\n==========Policy testing==========')
         # evaluation via real-env rollout
         ep_r = evaluate(agent, eval_env, config['env_name'])
 
         train_result.update({'ep_r': ep_r})
-
         result_log = {'log': train_result, 'step': iteration}
         result_logs[str(iteration)] = result_log
 
@@ -249,11 +189,11 @@ def run(config):
     print('\n==========Start training==========')
 
     for iteration in tqdm(range(0, config['total_iterations']), ncols=70, desc=config['algo'], initial=1, total=config['total_iterations'], ascii=True, disable=os.environ.get("DISABLE_TQDM", False)):
-        o, s, a, r, mask, s_next, o_next, a_next = offline_dataset.sample(config['batch_size'])
+        o, s, a, r, mask, s_next, o_next, a_next = offline_dataset.sample(config['batch_size'])        
         if config['algo'] == 'OMIGA':
             train_result = agent.train_step(o, s, a, r, mask, s_next, o_next, a_next)
         else:
-            train_result = agent.train_step(o, s, a, r, mask, s_next, o_next, a_next, config['pg_norm'],
+            train_result = agent.train_step(o, s, a, r, mask, s_next, o_next, a_next, config['coeff_rl'],
                                             config['clipq'], config['max_epi_ret_in_dataset'], bc=config['bc'])
 
         if iteration % config['log_iterations'] == 0:
