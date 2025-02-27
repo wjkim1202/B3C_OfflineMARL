@@ -10,7 +10,7 @@ from networks.network_comm import Actor_comm#, V_critic, Q_critic, MixNet
 
 class OMIGA(object):
     def __init__(self, observation_spec, action_spec, state_spec,  num_agent, eval_env, config):
-        self._alpha = self._alpha = config['alpha']
+        self._alpha = config['alpha']
         self._gamma = config['gamma']
         self._tau = config['tau']
         self._hidden_sizes = config['hidden_sizes']
@@ -116,8 +116,6 @@ class OMIGA(object):
         z = torch.clamp(z, min=-10.0, max=10.0)
 
         exp_a = torch.exp(z).detach().squeeze(-1)
-
-        pdb.set_trace()
         
         # v_loss
         loss_result = self.v_loss(z, w_target.detach(), v_values, result=loss_result)
