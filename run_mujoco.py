@@ -80,7 +80,7 @@ def make_eval_env(config):
 
 def run(config):
 
-    entity_name = "wjkim1202"
+    entity_name = ""
     project_name = "B3C"
 
     if config['algo'] == 'OMIGA':
