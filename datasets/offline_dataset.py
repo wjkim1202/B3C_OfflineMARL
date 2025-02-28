@@ -49,9 +49,8 @@ class ReplayBuffer(object):
             elif offline_ver == 3:
                 data_type = 'medium-replay'
 
-            env_name = env_name[3:-9]
-            data_file = './data/' +env_name + '-' + data_type + '.hdf5'
-            pdb.set_trace()
+            data_file = './data/' + env_name[3:-9] + '-' + data_type + '.hdf5'
+            data_file2 = None
 
         else:
             data_type2, data_file2 = None, None
@@ -76,36 +75,36 @@ class ReplayBuffer(object):
                 data_file2 = './data/' + env_name[3:-9] + '-' + data_type2 + '.hdf5'
 
 
-        if 'pred_prey' in env_name:
-            if offline_ver > 2:
-                data_file2 = './data/'
-            if agent_view_radius == 0.5:
-                if offline_ver == 0:
-                    data_file = data_file + 'continuous_pred_prey_3a0.5_from_ADER_3000050.hdf5'
-                elif offline_ver == 1:
-                    data_file = data_file + 'continuous_pred_prey_3a0.5_from_ADER_500050.hdf5'
-                elif offline_ver == 2:
-                    data_file =  data_file +'continuous_pred_prey_3a0.5_from_ADER_200050.hdf5'
-                elif offline_ver == 3:
-                    data_file =  data_file + 'continuous_pred_prey_3a0.5_from_ADER_3000050.hdf5'
-                    data_file2 =  data_file2 + 'continuous_pred_prey_3a0.5_from_ADER_500050.hdf5'
-                elif offline_ver == 4:
-                    data_file =  data_file +  'continuous_pred_prey_3a0.5_from_ADER_3000050.hdf5'
-                    data_file2 =  data_file2 + 'continuous_pred_prey_3a0.5_from_ADER_200050.hdf5'
-                elif offline_ver == 5:
-                    data_file =  data_file + 'continuous_pred_prey_3a0.5_from_ADER_500050.hdf5'
-                    data_file2 =  data_file2 + 'continuous_pred_prey_3a0.5_from_ADER_200050.hdf5'
-                elif agent_view_radius == 0.3:
-                    if offline_ver == 0:
-                        data_file = data_file + 'continuous_pred_prey_3a0.3_from_ADER_2000050.hdf5'
-                    elif offline_ver == 1:
-                        data_file = data_file + 'continuous_pred_prey_3a0.3_from_ADER_400050.hdf5'
-                    elif offline_ver == 2:
-                        data_file =  data_file + 'continuous_pred_prey_3a0.3_from_ADER_2000050.hdf5'
-                        data_file2 =  data_file2 + 'continuous_pred_prey_3a0.3_from_ADER_400050.hdf5'
-                else:
-                    print("DO NOT EXIST")
-                    pdb.set_trace()
+        # if 'pred_prey' in env_name:
+        #     if offline_ver > 2:
+        #         data_file2 = './data/'
+        #     if agent_view_radius == 0.5:
+        #         if offline_ver == 0:
+        #             data_file = data_file + 'continuous_pred_prey_3a0.5_from_ADER_3000050.hdf5'
+        #         elif offline_ver == 1:
+        #             data_file = data_file + 'continuous_pred_prey_3a0.5_from_ADER_500050.hdf5'
+        #         elif offline_ver == 2:
+        #             data_file =  data_file +'continuous_pred_prey_3a0.5_from_ADER_200050.hdf5'
+        #         elif offline_ver == 3:
+        #             data_file =  data_file + 'continuous_pred_prey_3a0.5_from_ADER_3000050.hdf5'
+        #             data_file2 =  data_file2 + 'continuous_pred_prey_3a0.5_from_ADER_500050.hdf5'
+        #         elif offline_ver == 4:
+        #             data_file =  data_file +  'continuous_pred_prey_3a0.5_from_ADER_3000050.hdf5'
+        #             data_file2 =  data_file2 + 'continuous_pred_prey_3a0.5_from_ADER_200050.hdf5'
+        #         elif offline_ver == 5:
+        #             data_file =  data_file + 'continuous_pred_prey_3a0.5_from_ADER_500050.hdf5'
+        #             data_file2 =  data_file2 + 'continuous_pred_prey_3a0.5_from_ADER_200050.hdf5'
+        #         elif agent_view_radius == 0.3:
+        #             if offline_ver == 0:
+        #                 data_file = data_file + 'continuous_pred_prey_3a0.3_from_ADER_2000050.hdf5'
+        #             elif offline_ver == 1:
+        #                 data_file = data_file + 'continuous_pred_prey_3a0.3_from_ADER_400050.hdf5'
+        #             elif offline_ver == 2:
+        #                 data_file =  data_file + 'continuous_pred_prey_3a0.3_from_ADER_2000050.hdf5'
+        #                 data_file2 =  data_file2 + 'continuous_pred_prey_3a0.3_from_ADER_400050.hdf5'
+        #         else:
+        #             print("DO NOT EXIST")
+        #             pdb.set_trace()
 
 
         print('Loading from:', data_file)
@@ -137,10 +136,10 @@ class ReplayBuffer(object):
             d = np.concatenate([d[:int(s.shape[0]/2)], d_[:int(s.shape[0]/2)]], axis=0)
             
         
-        avg_epi_ret_in_dataset = np.sum(r, axis=1).mean()
+        avg_epi_ret_in_dataset2 = np.sum(r, axis=1).mean()
         max_epi_ret_in_dataset2 = np.sum(r, axis=1).max()
 
-        print("############ avg_epi_ret_in_dataset : ", avg_epi_ret_in_dataset)
+        print("############ avg_epi_ret_in_dataset : ", avg_epi_ret_in_dataset2)
         print("############ max_epi_ret_in_dataset : ", max_epi_ret_in_dataset2)
 
         # if mix:            
@@ -165,6 +164,7 @@ class ReplayBuffer(object):
         ind = np.where(d==1)[0]
 
         max_epi_ret_in_dataset = -1000
+        avg_epi_ret_in_dataset = 0
         for indd in range(len(ind)):
             if indd == 0:
                 r_temp = r[:ind[indd]+1].sum()
@@ -177,17 +177,22 @@ class ReplayBuffer(object):
                 pdb.set_trace()
             if r_temp > max_epi_ret_in_dataset:
                 max_epi_ret_in_dataset = r_temp
+            avg_epi_ret_in_dataset += r_temp
 
+        
         if 'pred_prey' in env_name:
             max_epi_ret_in_dataset = max_epi_ret_in_dataset2
 
 
+        # pdb.set_trace()
         if 'fo' in env_name:
             s = s.reshape([-1, n_agents, s.shape[-1]])
+            avg_epi_ret_in_dataset = avg_epi_ret_in_dataset/len(ind)
         else:
             s = s.reshape([-1, 1, s.shape[-1]])
             s = np.repeat(s, n_agents, axis=1)
             max_epi_ret_in_dataset = max_epi_ret_in_dataset2
+            avg_epi_ret_in_dataset = avg_epi_ret_in_dataset2
         
         o = o.reshape([-1, n_agents, o.shape[-1]])
         a = a.reshape([-1, n_agents, n_actions])
